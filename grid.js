@@ -261,13 +261,15 @@ function drawPath(paths) {
 }
 
 initializeBlock();
+drawGrid();
+fillblocks();
 
-var queue = new deque();
-var map = new hashtable();
-queue.appendleft(blocks[0][0]);
+var queue = null;
+var map = null;
+var next = null;
 
-function dfs() {
-  requestAnimationFrame(dfs);
+function dfss() {
+  requestAnimationFrame(dfss);
 
   if (queue.len > 0) {
     var next = queue.pop();
@@ -308,8 +310,16 @@ function dfs() {
     drawGrid();
     fillblocks();
     drawPath(next.path());
-
   }
 }
 
-dfs();
+function search() {
+  initializeBlock();
+  drawGrid();
+  fillblocks();
+
+  queue = new deque();
+  map = new hashtable();
+  queue.appendleft(blocks[0][0]);
+  dfss();
+}

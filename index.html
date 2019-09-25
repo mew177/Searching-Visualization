@@ -9,14 +9,19 @@
     body {
       margin: 0px;
     }
+    div {
+      margin: 8px;
+    }
+
   </style>
 </head>
 <body>
-  <div>
-    <h2 id="cost"> Cost: 0</h2>
-    <button id='Astar'> Astar </button>
+  <div id="main">
+    <p id="cost"> Cost: </p>
+    <button id='Astar' onclick='astar()'> Astar </button>
   </div>
   <canvas id='myCanvas'> </canvas>
   <script src="Astar.js"> </script>
+  <script src="grid.js"> </script>
 </body>
 </html>

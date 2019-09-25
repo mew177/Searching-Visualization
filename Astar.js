@@ -2,10 +2,11 @@ var canvas = document.querySelector('canvas');
 
 // canvas location and attribute
 var win_width = window.innerWidth;
-var win_height = 620;
+var win_height = 580;
 canvas.width = win_width;
 canvas.height = window.innerHeight;
 canvas.style.top = window.innerHeight-win_height + "px";
+canvas.style.left = window.innerWidth-win_width + "px";
 canvas.style.position = "absolute";
 
 var c = canvas.getContext('2d');
@@ -344,14 +345,13 @@ function showCost(cost) {
   document.getElementById('cost').innerHTML = 'Cost: ' + cost;
 }
 
+// start searching process
 initializeBlock();
 drawGrid();
 fillblocks();
 
-var queue = new priorityQueue();
-var map = new hashtable();
-queue.add(new Block(0, 0, grid_w, grid_h));
-
+var queue = null;
+var map = null;
 var next = null;
 
 function dfs() {
@@ -395,7 +395,15 @@ function dfs() {
       showCost('No solution');
     }
   }
-
 }
 
-dfs();
+function astar() {
+  initializeBlock();
+  drawGrid();
+  fillblocks();
+
+  queue = new priorityQueue();
+  map = new hashtable();
+  queue.add(new Block(0, 0, grid_w, grid_h));
+  dfs();
+}
