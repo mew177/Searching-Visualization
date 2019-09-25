@@ -2,14 +2,25 @@ var canvas = document.querySelector('canvas');
 
 // canvas location and attribute
 var win_width = window.innerWidth;
-var win_height = 620;
+var win_height = 580;
 canvas.width = win_width;
 canvas.height = window.innerHeight;
 canvas.style.top = window.innerHeight-win_height + "px";
+canvas.style.left = window.innerWidth-win_width + "px";
 canvas.style.position = "absolute";
 
+var c = canvas.getContext('2d');
+
+// configuration attribute
+var grid_w = 20;
+var grid_h = 20;
+var rows = Math.floor(win_height / grid_w);
+var cols = Math.floor(win_width / grid_h);
+var blocks = create2DArray(cols, rows);
+
 var colors = ['white', 'black', 'red', 'yellow', 'green', 'blue'];
-var dense = 0.35
+var dense = 0.32;
+var cost = 1;
 
 /*                      **
 **  Prority queue Class **
@@ -25,16 +36,23 @@ class priorityQueue {
     var temp = new Array(this.len+1);
     var idx = -1
     for(var i = 0; i < this.len; i++) {
-      if(e.f <= this.x[i].f) {
+      if(e.f_value() < this.x[i].f_value()) {
         temp[i] = this.x[i];
         idx = i;
+      } else if (e.f_value() == this.x[i].f_value()) {
+        if (e.h_value() < this.x[i].h_value()) {
+          temp[i] = this.x[i];
+          idx = i;
+        } else {
+          temp[i+1] = this.x[i];
+        }
       } else {
         temp[i+1] = this.x[i];
       }
     }
-
     temp[idx+1] = e;
     this.x = temp;
+    //console.log(this.x);
     this.len += 1;
   }
 
@@ -118,7 +136,7 @@ class deque {
 }
 
 class Block {
-  constructor(i, j, w, h) {
+  constructor(i, j, g_val=0, parent=null, w=grid_w, h=grid_h) {
     this.i = i; // row
     this.j = j; // column
     this.x = j * w; // width
@@ -126,8 +144,10 @@ class Block {
     this.w = w;
     this.h = h;
     this.color = colors[0];
-    this.parent = null;
-    this.f = 0;
+    this.parent = parent;
+    this.f_val = 0;
+    this.h_val = 0;
+    this.g_val = g_val;
 
     if (Math.random() < dense) {
       this.color = colors[1];
@@ -172,21 +192,51 @@ class Block {
     return p.x;
   }
 
-  generateNeighbors(rows, cols) {
+  generateNeighbors() {
     var arr = new deque();
-    if (this.i+1 < rows) {
-      arr.appendleft(blocks[this.i+1][this.j])
+    var tempBlock = new Block();
+    if (this.i+1 < rows && blocks[this.i+1][this.j].color == 'white') {
+      tempBlock = new Block(this.i+1, this.j, this.g_value()+1, this);
+      arr.appendleft(tempBlock);
     }
-    if (this.i-1 >= 0) {
-      arr.appendleft(blocks[this.i-1][this.j])
+    if (this.i-1 >= 0 && blocks[this.i-1][this.j].color == 'white') {
+      tempBlock = new Block(this.i-1, this.j, this.g_value()+1, this);
+      arr.appendleft(tempBlock);
     }
-    if (this.j+1 < cols) {
-      arr.appendleft(blocks[this.i][this.j+1])
+    if (this.j+1 < cols && blocks[this.i][this.j+1].color == 'white') {
+      tempBlock = new Block(this.i, this.j+1, this.g_value()+1, this);
+      arr.appendleft(tempBlock);
     }
-    if (this.j-1 >= 0) {
-      arr.appendleft(blocks[this.i][this.j-1])
+    if (this.j-1 >= 0 && blocks[this.i][this.j-1].color == 'white') {
+      tempBlock = new Block(this.i, this.j-1, this.g_value()+1, this);
+      arr.appendleft(tempBlock);
     }
     return arr.x;
+  }
+
+  h_value(MODE=1) {
+    switch (MODE) {
+      case 0:
+        // straight distance
+        this.h_val = Math.sqrt((rows-this.i)*(rows-this.i)+(cols-this.j)*(cols-this.j));
+        break;
+      case 1:
+        // manhatton distance
+        this.h_val = rows-this.i+cols-this.j;
+        break
+      default:
+        this.h_val = 0;
+    }
+    return this.h_val;
+  }
+
+  g_value() {
+    return this.g_val;
+  }
+
+  f_value() {
+    this.f_val = this.h_value() + this.g_value();
+    return this.f_val;
   }
 }
 
@@ -199,29 +249,10 @@ function create2DArray(rows, cols) {
   return x;
 }
 
-var grid_w = 20;
-var grid_h = 20;
-var rows = Math.floor(win_height / grid_w);
-var cols = Math.floor(win_width / grid_h);
-var blocks = create2DArray(cols, rows);
-
-var c = canvas.getContext('2d');
-
 function initializeBlock() {
   for(var row = 0; row < rows; row++) {
     for(var col = 0; col < cols; col++) {
       blocks[row][col] = new Block(row, col, grid_w, grid_h);
-    }
-  }
-
-  // fill unreachable blocks
-  for(var i = 0; i < rows; i++) {
-    for(var j = 0; j < cols; j++) {
-      var b = blocks[i][j];
-      var neighbors = b.generateNeighbors(rows, cols);
-      if (neighbors.length == 0) {
-        b.setColor('black');
-      }
     }
   }
 
@@ -289,7 +320,7 @@ class hashtable {
       return this.values[idx];
     } else {
       console.log('Key not found');
-      return null;
+      return -1;
     }
   }
 
@@ -298,76 +329,145 @@ class hashtable {
   }
 }
 
-function hash(key) {
-  var x = key[0];
-  var y = key[1];
-  return "r" + x + 'c' + y;
-}
-
 function drawPath(paths) {
   c.beginPath();
   c.moveTo((grid_h/2), (grid_w/2));
   for (var i = 0; i < paths.length ; i++) {
     var node = paths;
-    console.log(paths[i])
     c.lineTo(paths[i].x+(grid_h/2), paths[i].y+(grid_w/2));
   }
   c.strokeStyle = 'red';
   c.lineWidth = 5;
   c.stroke();
-
 }
 
+function showCost(cost) {
+  document.getElementById('cost').innerHTML = 'Cost: ' + cost;
+}
+
+// start searching process
 initializeBlock();
+drawGrid();
+fillblocks();
 
-var queue = new deque();
-var map = new hashtable();
-queue.appendleft(blocks[0][0]);
+var SEARCH_MODE = 0;
 
-function dfs() {
-  requestAnimationFrame(dfs);
+var queue = null;
+var map = null;
+var next = null;
+
+function astar() {
+  if (SEARCH_MODE != 0) {
+    return;
+  }
+  requestAnimationFrame(astar);
+
+  c.clearRect(0, 0, win_width, win_height);
+  drawGrid();
+  fillblocks();
 
   if (queue.len > 0) {
-    var next = queue.pop();
+    next = queue.pop();
     if (next.isGoal()) {
-      next.setColor('yellow');
+      blocks[next.i][next.j].setColor('yellow');
       queue.clear();
+      solution = next.path();
+
+    } else if (next != null) {
+      var row = next.i;
+      var col = next.j;
+      var block = blocks[row][col];
+
+      map.put(next.hash(), next.f_value());
+      block.setColor('yellow');
+
+      var neighbors = next.generateNeighbors();
+
+      for(var i = 0; i < neighbors.length; i++) {
+        if(neighbors[i].f_value() > map.get(neighbors[i].hash())) {
+          queue.add(neighbors[i]);
+        }
+      }
+    }
+
+    showCost(next.path().length-2); // eliminate start and end state
+    drawPath(next.path());
+  } else {
+    if (next.isGoal()) {
+      drawPath(next.path());
+      showCost(next.path().length-2);
+    } else {
+      showCost('No solution');
+    }
+  }
+}
+
+function bfs() {
+  if (SEARCH_MODE != 1) {
+    return;
+  }
+  requestAnimationFrame(bfs);
+
+  c.clearRect(0, 0, win_width, win_height);
+  drawGrid();
+  fillblocks();
+
+  if (queue.len > 0) {
+    next = queue.pop();
+    if (next.isGoal()) {
+      blocks[next.i][next.j].setColor('yellow');
+      queue.clear();
+      solution = next.path();
 
     } else if (next != null && !map.exists(next.hash())) {
       var row = next.i;
       var col = next.j;
-      var block = blocks[row][col]
+      var block = blocks[row][col];
 
-      map.put(next.hash(), block);
+      map.put(next.hash(), true);
       block.setColor('yellow');
 
-      if (row+1 < rows && !queue.exists(blocks[row+1][col]) && blocks[row+1][col].color == 'white') {
-        blocks[row+1][col].parent = next;
-        queue.appendleft(blocks[row+1][col]);
-      }
+      var neighbors = next.generateNeighbors();
 
-      if (col+1 < cols && !queue.exists(blocks[row][col+1]) && blocks[row][col+1].color == 'white') {
-        blocks[row][col+1].parent = next;
-        queue.appendleft(blocks[row][col+1]);
-      }
-
-      if (row-1 >= 0 && !queue.exists(blocks[row-1][col]) && blocks[row-1][col].color == 'white') {
-        blocks[row-1][col].parent = next;
-        queue.appendleft(blocks[row-1][col]);
-      }
-
-      if (col-1 >= 0 && !queue.exists(blocks[row][col-1]) && blocks[row][col-1].color == 'white') {
-        blocks[row][col-1].parent = next;
-        queue.appendleft(blocks[row][col-1]);
+      for(var i = 0; i < neighbors.length; i++) {
+        queue.appendleft(neighbors[i]);
       }
     }
 
-    c.clearRect(0, 0, win_width, win_height);
-    drawGrid();
-    fillblocks();
+    showCost(next.path().length-2); // eliminate start and end state
     drawPath(next.path());
-
+  } else {
+    if (next.isGoal()) {
+      drawPath(next.path());
+      showCost(next.path().length-2);
+    } else {
+      showCost('No solution');
+    }
   }
 }
 
-dfs();
+function bfs_start() {
+  SEARCH_MODE = 1;
+  initializeBlock();
+  drawGrid();
+  fillblocks();
+
+  queue = new deque();
+  map = new hashtable();
+  queue.appendleft(new Block(0, 0, grid_w, grid_h));
+
+  bfs();
+}
+
+function astar_start() {
+  SEARCH_MODE = 0;
+  initializeBlock();
+  drawGrid();
+  fillblocks();
+
+  queue = new priorityQueue();
+  map = new hashtable();
+  queue.add(new Block(0, 0, grid_w, grid_h));
+
+  astar();
+}
