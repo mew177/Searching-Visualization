@@ -105,6 +105,16 @@ class deque {
     this.len += 1;
   }
 
+  appendright(e) {
+    var temp = new Array(this.len+1);
+    for(var i = 0; i < this.len; i++) {
+      temp[i] = this.x[i];
+    }
+    temp[this.len] = e;
+    this.x = temp;
+    this.len += 1;
+  }
+
   pop() {
     if (this.len <= 0) {
       console.log('Pop element from empty queue');
@@ -156,10 +166,6 @@ class Block {
 
   setColor(color) {
     this.color = color;
-  }
-
-  resetColor() {
-    this.color = colors[Math.floor(Math.random() * 6)];
   }
 
   getGridPosition() {
@@ -351,11 +357,13 @@ drawGrid();
 fillblocks();
 
 var SEARCH_MODE = 0;
-
 var queue = null;
+var queue2 = null;
 var map = null;
 var next = null;
 
+
+/*=========== A* searching ===========*/
 function astar() {
   if (SEARCH_MODE != 0) {
     return;
@@ -374,9 +382,7 @@ function astar() {
       solution = next.path();
 
     } else if (next != null) {
-      var row = next.i;
-      var col = next.j;
-      var block = blocks[row][col];
+      var block = blocks[next.i][next.j];
 
       map.put(next.hash(), next.f_value());
       block.setColor('yellow');
@@ -402,6 +408,20 @@ function astar() {
   }
 }
 
+function astar_start() {
+  SEARCH_MODE = 0;
+  initializeBlock();
+  drawGrid();
+  fillblocks();
+
+  queue = new priorityQueue();
+  map = new hashtable();
+  queue.add(new Block(0, 0, grid_w, grid_h));
+
+  astar();
+}
+
+/*=========== bfs searching ===========*/
 function bfs() {
   if (SEARCH_MODE != 1) {
     return;
@@ -420,9 +440,7 @@ function bfs() {
       solution = next.path();
 
     } else if (next != null && !map.exists(next.hash())) {
-      var row = next.i;
-      var col = next.j;
-      var block = blocks[row][col];
+      var block = blocks[next.i][next.j];
 
       map.put(next.hash(), true);
       block.setColor('yellow');
@@ -459,15 +477,169 @@ function bfs_start() {
   bfs();
 }
 
-function astar_start() {
-  SEARCH_MODE = 0;
+/*=========== bfs searching ===========*/
+function dfs() {
+  if (SEARCH_MODE != 2) {
+    return;
+  }
+  requestAnimationFrame(dfs);
+
+  c.clearRect(0, 0, win_width, win_height);
+  drawGrid();
+  fillblocks();
+
+  if (queue.len > 0) {
+    next = queue.pop();
+    if (next.isGoal()) {
+      blocks[next.i][next.j].setColor('yellow');
+      queue.clear();
+      solution = next.path();
+
+    } else if (next != null && !map.exists(next.hash())) {
+      var block = blocks[next.i][next.j];
+
+      map.put(next.hash(), true);
+      block.setColor('yellow');
+
+      var neighbors = next.generateNeighbors();
+
+      for(var i = 0; i < neighbors.length; i++) {
+        queue.appendright(neighbors[i]);
+      }
+    }
+
+    showCost(next.path().length-2); // eliminate start and end state
+    drawPath(next.path());
+  } else {
+    if (next.isGoal()) {
+      drawPath(next.path());
+      showCost(next.path().length-2);
+    } else {
+      showCost('No solution');
+    }
+  }
+}
+
+function dfs_start() {
+  SEARCH_MODE = 2;
   initializeBlock();
   drawGrid();
   fillblocks();
 
-  queue = new priorityQueue();
+  queue = new deque();
   map = new hashtable();
-  queue.add(new Block(0, 0, grid_w, grid_h));
+  queue.appendright(new Block(0, 0, grid_w, grid_h));
 
-  astar();
+  dfs();
 }
+
+/*=========== bi direction searching ===========*/
+// function bi_direction_from_start() {
+//   if (SEARCH_MODE != 2) {
+//     return;
+//   }
+//   requestAnimationFrame(bi_direction_from_start);
+//
+//   c.clearRect(0, 0, win_width, win_height);
+//   drawGrid();
+//   fillblocks();
+//
+//   if (queue.len > 0) {
+//     next = queue.pop();
+//     if (map.exists(next.hash()) && map.get(next.hash()) == 'end') {
+//       blocks[next.i][next.j].setColor('yellow');
+//       queue.clear();
+//       solution = next.path();
+//     } else if (next != null) {
+//       var block = blocks[next.i][next.j];
+//
+//       map.put(next.hash(), 'start');
+//       block.setColor('yellow');
+//
+//       var neighbors = next.generateNeighbors();
+//
+//       for(var i = 0; i < neighbors.length; i++) {
+//         queue.add(neighbors[i]);
+//       }
+//
+//       //showCost(next.path().length-2); // eliminate start and end state
+//       drawPath(next.path());
+//       console.log(next.path());
+//     }
+//
+//   } else {
+//     if (next.isGoal()) {
+//       drawPath(next.path());
+//       showCost(next.path().length-2);
+//     } else {
+//       showCost('No solution');
+//     }
+//   }
+//
+//   c.clearRect(0, 0, win_width, win_height);
+//   drawGrid();
+//   fillblocks();
+//
+// }
+//
+// function bi_direction_from_end() {
+//   if (SEARCH_MODE != 2) {
+//     return;
+//   }
+//   requestAnimationFrame(bi_direction_from_end);
+//
+//   if (queue2.len > 0) {
+//     next = queue2.pop();
+//     if (map.exists(next.hash()) && map.get(next.hash()) == 'start') {
+//       blocks[next.i][next.j].setColor('yellow');
+//       queue2.clear();
+//       solution = next.path();
+//     } else if (next != null) {
+//       var block = blocks[next.i][next.j];
+//
+//       map.put(next.hash(), 'start');
+//       block.setColor('yellow');
+//
+//       var neighbors = next.generateNeighbors();
+//
+//       for(var i = 0; i < neighbors.length; i++) {
+//         queue2.add(neighbors[i]);
+//       }
+//
+//       //showCost(next.path().length-2); // eliminate start and end state
+//       drawPath(next.path());
+//     }
+//
+//   } else {
+//     if (next.isGoal()) {
+//       drawPath(next.path());
+//       showCost(next.path().length-2);
+//     } else {
+//       showCost('No solution');
+//     }
+//   }
+//
+//   c.clearRect(0, 0, win_width, win_height);
+//   drawGrid();
+//   fillblocks();
+//
+// }
+//
+// function bi_direction_start() {
+//   SEARCH_MODE = 2;
+//   initializeBlock();
+//   drawGrid();
+//   fillblocks();
+//
+//   queue = new priorityQueue();
+//   queue2 = new priorityQueue();
+//   map = new hashtable();
+//   queue.add(new Block(0, 0));
+//   queue2.add(new Block(rows-1, cols-1))
+//
+//   console.log(queue);
+//   console.log(queue2);
+//
+//   bi_direction_from_start();
+//   bi_direction_from_end();
+// }
