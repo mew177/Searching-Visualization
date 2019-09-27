@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+    canvas {
+      border: 1px solid black;
+    }
+
+    body {
+      margin: 0px;
+    }
+    div {
+      margin: 8px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="main">
+    <p id="status"> Please initiate a puzzle </p>
+    <button id="init_btn" onclick="initiate_puzzle()"> initiate puzzle </button>
+    <button id="start_btn" onclick="init_dfs()"> Start </button>
+    <button id="solution_btn" onclick="animateSolution()"> Solution </button>
+  </div>
+  <canvas id='myCanvas'> </canvas>
+  <script src='utils.js'> </script>
+  <script src="eightPuzzle.js"> </script>
+</body>
+</html>
