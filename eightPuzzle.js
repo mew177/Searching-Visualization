@@ -148,13 +148,34 @@ function EightPuzzle(problem=[], parent=null, g=0, f=0, h=0) {
     return this.g_val;
   }
 
-  this.h_value = function() {
+
+  this.h_value = function(MODE=0) {
     var h = 0;
-    for (var i = 0; i < 9; i++) {
-      if (this.problem[i]!=0 && EndState[i]!=this.problem[i]) {
-        h += 1;
-      }
+    switch(MODE) {
+      case 1:
+        // no heuristic function
+        break;
+      case 2:
+        // misplaced tile
+        for (var i = 0; i < 9; i++) {
+          if (this.problem[i]!=0 && EndState[i]!=this.problem[i]) {
+            h += 1;
+          }
+        }
+      default:
+        // manhattan distance
+        for (var i = 0; i < 9; i++) {
+          var num = this.problem[i]
+          if (num != 0) {
+            var x_s = Math.floor(i / 3);
+            var y_s = i % 3;
+            var x_e = Math.floor((num-1) / 3);
+            var y_e = (num - 1) % 3;
+            h += (Math.abs(x_e - x_s) + Math.abs(y_e - y_s));
+          }
+        }
     }
+
     this.h_val = h;
     return this.h_val;
   }
@@ -177,8 +198,6 @@ function drawBlocks() {
       }
     }
 }
-
-
 
 // move a block to location (x, y)
 function moveTo(obj, x, y) {
