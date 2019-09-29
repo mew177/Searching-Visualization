@@ -11,7 +11,7 @@ var cxt = canvas.getContext('2d');
 var GRID_LEN = 20;
 var ROWS = Math.floor(canvas.height / GRID_LEN);
 var COLS = Math.floor(canvas.width / GRID_LEN);
-var cities_size = 60;
+var cities_size = 50;
 
 // City Class
 class City {
@@ -124,7 +124,12 @@ function draw_tour(tour, cities, x, y, dis=0, now=0, dx=1) {
     now += 1;
   }
 
-  dis += TSP_problem.distance(cities[tour[now-1]], cities[tour[now]]);
+  var thisDist = parseInt(TSP_problem.distance(cities[tour[now-1]], cities[tour[now]]).toFixed(2));
+
+  cxt.font = "20px Georgia";
+  cxt.fillText(thisDist, (cities[tour[now-1]].x+cities[tour[now]].x)/2, (cities[tour[now-1]].y+cities[tour[now]].y)/2);
+
+  dis += thisDist;
   document.getElementById('cost').innerHTML = "Distance: " + dis;
 
   cxt.beginPath();
@@ -135,6 +140,8 @@ function draw_tour(tour, cities, x, y, dis=0, now=0, dx=1) {
   cxt.stroke();
   x = cities[tour[now]].x;
   y = cities[tour[now]].y;
+
+
 
   document.getElementById('cost').innerHTML = "Distance: " + energy;
 }
