@@ -29,7 +29,6 @@ function init() {
   var rec = null;
   var previous_nodes = [rec];
   var this_nodes = [];
-  var count = 0;
   for (var i = 0; i < maxLevel; i++) {
     for (var j = 0; j < Math.pow(branch, i); j++) {
       // determine role of this node
@@ -41,14 +40,17 @@ function init() {
 
       // if this is leaf node, set its value as a random number
       if (i == 0) {
-        rec = new Node(role, i, j, count++, previous_nodes[Math.floor(j/branch)]);
+        rec = new Node(role, i, j, previous_nodes[Math.floor(j/branch)]);
       } else if (i == maxLevel-1) {
-        rec = new Node(role, i, j, count++, previous_nodes[Math.floor(j/branch)], Math.floor(Math.random()*20));
+        rec = new Node(role, i, j, previous_nodes[Math.floor(j/branch)], Math.floor(Math.random()*20));
       } else {
         start_node += 1;
-        rec = new Node(role, i, j, count++, previous_nodes[Math.floor(j/branch)]);
+        rec = new Node(role, i, j, previous_nodes[Math.floor(j/branch)]);
       }
 
+      if (i != 0 ) {
+        previous_nodes[Math.floor(j/branch)].children.push(rec);
+      }
       this_nodes.push(rec);
       nodes.push(rec);
     }
@@ -56,6 +58,8 @@ function init() {
     previous_nodes = this_nodes.slice();
     this_nodes = [];
   }
+
+  document.getElementById('stat').innerHTML = "Visited nodes: " + 0 + ". Total nodes: " + nodes.length;
 }
 
 function drawPath(paths) {
@@ -126,12 +130,17 @@ function draw_tree(paths=[], radius=16) {
 
     cxt.font = "15px Arial";
     cxt.fillStyle = 'black';
-    cxt.fillText(nodes[i].val, leftMargin+((win_width-leftMargin)/(Math.pow(branch, nodes[i].level)+1))*(nodes[i].index+1)-(radius/2), root_y+nodes[i].level*level_height+(radius/2));
+    var text = nodes[i].val;
+    if (text == null) {
+      text = 'X';
+    }
+    cxt.fillText(text, leftMargin+((win_width-leftMargin)/(Math.pow(branch, nodes[i].level)+1))*(nodes[i].index+1)-(radius/2), root_y+nodes[i].level*level_height+(radius/2));
   }
 }
 
-function minmax(baseIndex, level, index=0, count=1) {
+function minimax(baseIndex, level, index=0, count=1) {
   if (level < 0) {
+    console.log(nodes[0].path());
     draw_tree(nodes[0].path());
     return ;
   }
@@ -148,18 +157,212 @@ function minmax(baseIndex, level, index=0, count=1) {
       index = 0;
     }
 
-    minmax(baseIndex, level, index, count+1);
+    minimax(baseIndex, level, index, count+1);
   });
 
   nodes[baseIndex+index].toParent();
   nodes[baseIndex+index].visit();
   index += 1;
   draw_tree();
-  document.getElementById('stat').innerHTML = "Visited nodes: " + count;
+  document.getElementById('stat').innerHTML = "Visited nodes: " + count + ". Total nodes: " + nodes.length;
 }
 
-function alphabeta() {
+function alphabeta(node, count=0) {
+  if (node == null) {
+    console.log(nodes[0].path());
+    draw_tree(nodes[0].path());
+    return ;
+  }
+  requestAnimationFrame(function() {
+    alphabeta(node, count);
+  });
 
+  if(!node.visit()) {
+    // if this node is first visited
+    count += 1;
+  }
+
+  if (checkValue(node)) {
+    if (upCheck(node)) {
+      // if prune the rest of branch
+      // back to parent node
+      // state comfimred => mark as visited
+      update(node);
+      node.visit();
+      node = node.parent;
+    } else {
+      // keep going on children node
+      node = nextNode(node);
+    }
+  } else {
+    node = nextNode(node);
+  }
+
+
+  draw_tree();
+  document.getElementById('stat').innerHTML = "Visited nodes: " + count + ". Total nodes: " + nodes.length;
+
+  // check whether value of this node is null or not
+  function checkValue(node) {
+    if (node != null) {
+      if (node.val == null) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  }
+
+  // update parent's node with this node
+  function update(node) {
+    if (node.parent != null) {
+      if (node.parent.val == null) {
+        node.parent.val = node.val;
+        node.parent.from = node;
+      } else if (node.parent.role == MAXPLAYER && node.val > node.parent.val) {
+        node.parent.val = node.val;
+        node.parent.from = node;
+      } else if (node.parent.role == MINPLAYER && node.val < node.parent.val) {
+        node.parent.val = node.val;
+        node.parent.from = node;
+      }
+    }
+  }
+
+  function hasUnvisitedChild(node) {
+    if (node != null) {
+      for (var i = 0; i < node.node.children.length; i++) {
+        if (!node.children[i].visited) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  // return next node to process
+  function nextNode(node) {
+    if (node != null) {
+      for (var i = 0; i < node.children.length; i++) {
+        if (!node.children[i].visited) {
+          return node.children[i];
+        }
+      }
+    }
+    // no children hasn't been visited => node state comfirmed
+    console.log(node);
+    update(node);
+    node.visit();
+    return node.parent;
+  }
+
+  function upCheck(node) {
+    if (node != null) {
+      if (node.val != null && node.parent != null && node.parent.val != null) {
+        // if this value and parent's is not null, check state with parent's state
+        if (node.parent.role == MAXPLAYER) {
+          // parent is a max player
+          if (node.val < this.parent.val) {
+            // this state has a lower value
+            // prune rest of the branch
+            return true;
+          }
+        } else {
+          // parent is a min player
+          if (node.val > node.parent.val) {
+            // this state has a higher value
+            // prune rest of the branch
+            return true;
+          }
+        }
+      }
+    }
+    // keep tracking on branch
+    return false;
+  }
+}
+
+
+
+function alphabeta2(node, count=1) {
+
+  if (node == null) {
+    draw_tree(nodes[0].path());
+    return ;
+  }
+
+  requestAnimationFrame(function() {
+    alphabeta(node, count);
+  });
+
+  console.log('now: (', node.level, ', ', node.index, ', ', node.val, ')');
+
+  if (checkValue(node)) {
+    node.checkMyState();
+    node.toParent();
+    if(!node.visit()) {
+      // if this node is first visited
+      count += 1;
+    }
+
+    if (pruneTree(node)) {
+      node = node.parent;
+    } else {
+      node = nextNode(node);
+    }
+  } else {
+    node = nextNode(node);
+  }
+  document.getElementById('stat').innerHTML = "Visited nodes: " + count + ". Total nodes: " + nodes.length;
+
+  function nextNode(node) {
+    if (node != null) {
+      for (var i = 0; i < node.children.length; i++) {
+        if (!node.children[i].visited) {
+          return node.children[i];
+        }
+      }
+      return node.parent;
+    } else {
+      return null;
+    }
+  }
+
+  function pruneTree(node) {
+    if (node.parent != null) {
+      if (node.parent.role == MAXPLAYER) {
+        // if value of this node is smaller than parent value => prune this tree
+        if (node.val < node.parent.val) {
+          return true;
+        }
+      } else {
+        // if value of this node is larger than parent value => prune this tree
+        if (node.val > node.parent.val) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function checkValue(node) {
+    if (node.val == null) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+}
+
+function resetNodes() {
+  for (var i = 0 ; i < nodes.length; i++) {
+    nodes[i].color = 'black';
+    nodes[i].visited = false;
+    nodes[i].from = null;
+    nodes[i].val = nodes[i].orgVal;
+  }
+  cxt.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  draw_tree();
 }
 
 function initialize() {
@@ -167,6 +370,14 @@ function initialize() {
   draw_tree();
 }
 
-function startminmax() {
-  minmax(start_node+1, maxLevel-1);
+function startminimax() {
+  resetNodes();
+  minimax(start_node+1, maxLevel-1);
+  document.getElementById('start_alphabeta_btn').enable = false;
+}
+
+function startalphabeta() {
+  resetNodes();
+  alphabeta(nodes[0]);
+  document.getElementById('start_minimax_btn').enable = false;
 }

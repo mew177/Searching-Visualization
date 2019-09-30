@@ -3,35 +3,66 @@ var MINPLAYER = 0;
 
 class Node {
 
-  constructor(player, level, index, i, parent=null, val=null) {
+  constructor(player, level, index, parent=null, val=null) {
     this.val = val;
     this.parent = parent;
     this.role = player;
-    this.i = i;
     this.level = level;
     this.index = index;
+
     this.visited = false;
     this.color = 'black';
     this.from = null;
+    this.children = [];
+    this.orgVal = val;
   }
 
   visit() {
+    if (this.visited) {
+      return true;
+    }
+
     this.visited = true;
     this.color = 'red';
+    return false;
   }
 
   // deliver value from children to parent
   toParent() {
     if (this.parent != null) {
-      if ((this.parent.val == null) ||
-          (this.parent.role == MAXPLAYER && this.val > this.parent.val) ||
-          (this.parent.role == MINPLAYER && this.val < this.parent.val)) {
+      console.log('to parent. this(level:', this.level, ', index:', this.index, ', val:', this.val, ')');
+      if (this.parent.val == null) {
         // 0. if parent's value hasn't been set
-        // 1. if parent is a max player and value is larger than parent's value
-        // 2. if parent is a min player and value is smaller than parent's value
-        //console.log('set parent on level:', this.parent.level, 'index', this.parent.index, 'value -> ', this.val);
         this.parent.val = this.val;
-        this.parent.from = this;
+      } else if (this.parent.role == MAXPLAYER) {
+        // 1. if parent is a max player and value is larger than parent's value
+        this.parent.val = Math.max(this.val, this.parent.val);
+        console.log('parent set to (', this.parent.val, ')');
+      } else if (this.parent.role == MINPLAYER) {
+        this.parent.val = Math.min(this.val, this.parent.val);
+        console.log('parent set to (', this.parent.val, ')');
+      }
+      this.parent.from = this;
+    }
+  }
+
+  hasUnvisitedChildren() {
+    for (var i = 0; i < this.children.length; i++) {
+      if (!this.children[i].visited) {
+        return true;
+      }
+    }
+    return true;
+  }
+
+  checkMyState() {
+    if (!this.hasUnvisitedChildren()) {
+      for (var i = 0; i < this.children.length; i++) {
+        if (this.role == MINPLAYER) {
+          this.val = Math.min(this.children[i].val, this.val);
+        } else {
+          this.val = Math.max(this.children[i].val, this.val);
+        }
       }
     }
   }
@@ -60,7 +91,6 @@ class Node {
     var node = this;
     while(node.from != null) {
       paths.push(node.from);
-      console.log('push', node.from);
       node = node.from;
     }
     return paths;
