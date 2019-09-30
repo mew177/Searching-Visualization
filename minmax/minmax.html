@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+    canvas {
+      border: 1px solid black;
+    }
+
+    body {
+      margin: 0px;
+    }
+    div {
+      margin: 8px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="main">
+    <button id="init_btn" onclick="Initialize()"> initialize </button>
+    <button id="start_minmax_btn" onclick="startminmax()"> Start Min Max Algorithm </button>
+    <p id="stat"> Visited nodes: 0 </p>
+  </div>
+  <canvas id='myCanvas'> </canvas>
+  <script src='../utils/utils.js'> </script>
+  <script src="Node.js"> </script>
+  <script src="minmax.js"> </script>
+</body>
+</html>
