@@ -19,3 +19,4 @@ Maze
   
 MiniMax 
 - Implementation of "minimax algorithm" to find a reasonable path for player
+- Implementation of "alpha beta pruning algorithm" to increase efficiency
