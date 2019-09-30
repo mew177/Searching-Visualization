@@ -13,9 +13,9 @@ var cxt = canvas.getContext('2d');
 
 var level_height = 100;
 var root_x = win_width/2;
-var root_y = 60;
+var root_y = 50;
 var leftMargin = 40;
-var maxLevel = 5;
+var maxLevel = 6;
 var branch = 2;
 var start_player = MAXPLAYER;
 var nodes = [];
