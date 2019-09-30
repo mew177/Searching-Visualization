@@ -16,3 +16,6 @@ Maze
 - Implementation of "DFS", "BFS", and "A*" searching to solve maze problem
 - Including heuristic functions to make searching faster
   1. manhattan distance
+  
+MiniMax 
+- Implementation of "minimax algorithm" to find a reasonable path for player
