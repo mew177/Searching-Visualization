@@ -30,19 +30,18 @@ class Node {
   // deliver value from children to parent
   toParent() {
     if (this.parent != null) {
-      console.log('to parent. this(level:', this.level, ', index:', this.index, ', val:', this.val, ')');
       if (this.parent.val == null) {
         // 0. if parent's value hasn't been set
         this.parent.val = this.val;
-      } else if (this.parent.role == MAXPLAYER) {
+        this.parent.from = this;
+      } else if (this.parent.role == MAXPLAYER && this.val > this.parent.val) {
         // 1. if parent is a max player and value is larger than parent's value
-        this.parent.val = Math.max(this.val, this.parent.val);
-        console.log('parent set to (', this.parent.val, ')');
-      } else if (this.parent.role == MINPLAYER) {
-        this.parent.val = Math.min(this.val, this.parent.val);
-        console.log('parent set to (', this.parent.val, ')');
+        this.parent.val = this.val;
+        this.parent.from = this;
+      } else if (this.parent.role == MINPLAYER && this.val < this.parent.val) {
+        this.parent.val = this.val;
+        this.parent.from = this;
       }
-      this.parent.from = this;
     }
   }
 

@@ -21,6 +21,9 @@ var start_player = MAXPLAYER;
 var nodes = [];
 var start_node = 0;
 
+var LEFT = 0;
+var RIGHT = 1;
+
 function init() {
   nodes = [];
   start_node = 0;
@@ -167,14 +170,13 @@ function minimax(baseIndex, level, index=0, count=1) {
   document.getElementById('stat').innerHTML = "Visited nodes: " + count + ". Total nodes: " + nodes.length;
 }
 
-function alphabeta(node, count=0) {
+function alphabeta(node, direction, count=0) {
   if (node == null) {
-    console.log(nodes[0].path());
     draw_tree(nodes[0].path());
     return ;
   }
   requestAnimationFrame(function() {
-    alphabeta(node, count);
+    alphabeta(node, direction, count);
   });
 
   if(!node.visit()) {
@@ -192,10 +194,10 @@ function alphabeta(node, count=0) {
       node = node.parent;
     } else {
       // keep going on children node
-      node = nextNode(node);
+      node = nextNode(node, direction);
     }
   } else {
-    node = nextNode(node);
+    node = nextNode(node, direction);
   }
 
 
@@ -241,16 +243,25 @@ function alphabeta(node, count=0) {
   }
 
   // return next node to process
-  function nextNode(node) {
-    if (node != null) {
-      for (var i = 0; i < node.children.length; i++) {
-        if (!node.children[i].visited) {
-          return node.children[i];
+  function nextNode(node, direction) {
+    if (direction == LEFT) {
+      if (node != null) {
+        for (var i = 0; i < node.children.length; i++) {
+          if (!node.children[i].visited) {
+            return node.children[i];
+          }
+        }
+      }
+    } else {
+      if (node != null) {
+        for (var i = node.children.length-1; i >= 0; i--) {
+          if (!node.children[i].visited) {
+            return node.children[i];
+          }
         }
       }
     }
     // no children hasn't been visited => node state comfirmed
-    console.log(node);
     update(node);
     node.visit();
     return node.parent;
@@ -282,78 +293,6 @@ function alphabeta(node, count=0) {
   }
 }
 
-
-
-function alphabeta2(node, count=1) {
-
-  if (node == null) {
-    draw_tree(nodes[0].path());
-    return ;
-  }
-
-  requestAnimationFrame(function() {
-    alphabeta(node, count);
-  });
-
-  console.log('now: (', node.level, ', ', node.index, ', ', node.val, ')');
-
-  if (checkValue(node)) {
-    node.checkMyState();
-    node.toParent();
-    if(!node.visit()) {
-      // if this node is first visited
-      count += 1;
-    }
-
-    if (pruneTree(node)) {
-      node = node.parent;
-    } else {
-      node = nextNode(node);
-    }
-  } else {
-    node = nextNode(node);
-  }
-  document.getElementById('stat').innerHTML = "Visited nodes: " + count + ". Total nodes: " + nodes.length;
-
-  function nextNode(node) {
-    if (node != null) {
-      for (var i = 0; i < node.children.length; i++) {
-        if (!node.children[i].visited) {
-          return node.children[i];
-        }
-      }
-      return node.parent;
-    } else {
-      return null;
-    }
-  }
-
-  function pruneTree(node) {
-    if (node.parent != null) {
-      if (node.parent.role == MAXPLAYER) {
-        // if value of this node is smaller than parent value => prune this tree
-        if (node.val < node.parent.val) {
-          return true;
-        }
-      } else {
-        // if value of this node is larger than parent value => prune this tree
-        if (node.val > node.parent.val) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkValue(node) {
-    if (node.val == null) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-}
-
 function resetNodes() {
   for (var i = 0 ; i < nodes.length; i++) {
     nodes[i].color = 'black';
@@ -373,11 +312,9 @@ function initialize() {
 function startminimax() {
   resetNodes();
   minimax(start_node+1, maxLevel-1);
-  document.getElementById('start_alphabeta_btn').enable = false;
 }
 
-function startalphabeta() {
+function startalphabeta(direction=1) {
   resetNodes();
-  alphabeta(nodes[0]);
-  document.getElementById('start_minimax_btn').enable = false;
+  alphabeta(nodes[0], direction);
 }
