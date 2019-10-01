@@ -314,7 +314,7 @@ function startminimax() {
   minimax(start_node+1, maxLevel-1);
 }
 
-function startalphabeta(direction=1) {
+function startalphabeta(direction=0) {
   resetNodes();
   alphabeta(nodes[0], direction);
 }
