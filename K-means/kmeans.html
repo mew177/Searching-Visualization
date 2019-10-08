@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+    div.left {
+      margin: 40px;
+    }
+
+    div.right {
+      margin-left: 600px;
+    }
+
+    canvas {
+      border: 3px solid black;
+    }
+
+    body {
+      margin: 0px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="left">
+    <h1 id="theme"> K-means Algorithm Visualization </h1>
+    <canvas id='myCanvas'> </canvas>
+  </div>
+
+  <div class="right">
+    <p> This is a visualization of k-means algorithm </p>
+    <button class="btn" id="create_points_btn" onclick="create_points()"> Create Points </button>
+    <button class="btn" id="create_centers_btn" onclick="create_centers()"> Create Centers </button> </br>
+    <p> Number of Points </p>
+    <input type="text" id="num_points" value="300">
+    <p> Number of Centers </p>
+    <input type="text" id="num_centers" value="3">
+    <p> Update Clusters </p>
+    <button class="btn" id="update_group_btn" onclick="update()"> Update Clusters </button>
+  </div>
+  <script src='../utils/utils.js'> </script>
+  <script src="Point.js"> </script>
+  <script src="kmeans.js"> </script>
+</body>
+</html>
