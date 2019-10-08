@@ -14,6 +14,7 @@ var Points = [];
 var Centers = [];
 var dense = 0.5;
 
+// draw points and centers
 function draw_points() {
 
   ctx.clearRect(0, 0, win_width, win_height);
@@ -35,6 +36,7 @@ function draw_points() {
 
 }
 
+// initialize points
 function create_points() {
   Points = [];
   var num_points = document.getElementById('num_points').value;
@@ -63,6 +65,7 @@ function create_points() {
   draw_points();
 }
 
+// initialize centers
 function create_centers() {
   Centers = [];
   var num_centers = document.getElementById('num_centers').value;
@@ -74,10 +77,12 @@ function create_centers() {
   draw_points();
 }
 
+// distance calculation
 function distance(p1, p2) {
   return Math.sqrt(Math.pow(p1.x-p2.x, 2) + Math.pow(p1.y-p2.y, 2));
 }
 
+// update group belowing of points
 function update_group() {
   for (var p = 0; p < Points.length; p++) {
     dis = [];
@@ -88,6 +93,7 @@ function update_group() {
   }
 }
 
+// center moving animation
 function move_center_animation(targets, x=1, pace=10) {
   if (x > pace) {
     return ;
@@ -106,6 +112,7 @@ function move_center_animation(targets, x=1, pace=10) {
 
 }
 
+// calculate the target center point of next step
 function update_center() {
   var targets = new Array(Centers.length);
   for (var c = 0; c < Centers.length; c++) {
@@ -125,7 +132,7 @@ function update_center() {
   move_center_animation(targets);
 }
 
-
+// update points and centers
 function update() {
   update_group();
   update_center();
