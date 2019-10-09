@@ -12,7 +12,6 @@ var ctx = canvas.getContext('2d');
 var Colors = ["black", "red", "green", "blue", "yellow", "purple", "pink", "Silver", "Fuchsia"];
 var Points = [];
 var Centers = [];
-var dense = 0.5;
 
 // draw points and centers
 function draw_points() {
@@ -47,8 +46,10 @@ function create_points() {
     clusters.push(new Point(Math.random()*win_width, Math.random()*win_height));
   }
 
+  var dense = document.getElementById('dense').value / 100;
+
   for (var i = 0; i < num_points; i++) {
-    if (Math.random() > dense) {
+    if (Math.random() < dense) {
       while (true) {
         var g = Math.floor(Math.random()*num_centers);
         var p = new Point(clusters[g].x + Math.random()*80-40, clusters[g].y + Math.random()*80-40)
@@ -84,13 +85,18 @@ function distance(p1, p2) {
 
 // update group belowing of points
 function update_group() {
+  var D = 0;
   for (var p = 0; p < Points.length; p++) {
     dis = [];
     for (var c = 0; c < Centers.length; c++) {
       dis.push(distance(Points[p], Centers[c]));
     }
-    Points[p].setGroup(Centers[dis.indexOf(Math.min.apply(Math, dis))].group);
+    var d = dis.indexOf(Math.min.apply(Math, dis));
+    D += dis[d];
+    Points[p].setGroup(Centers[d].group);
   }
+  
+  document.getElementById('cluster_text').innerHTML = "Mean Distance: " + (D/Points.length).toFixed(2);
 }
 
 // center moving animation
@@ -109,7 +115,6 @@ function move_center_animation(targets, x=1, pace=10) {
   }
 
   draw_points();
-
 }
 
 // calculate the target center point of next step
@@ -136,5 +141,36 @@ function update_center() {
 function update() {
   update_group();
   update_center();
+}
+
+function scaleBarOnchage(id) {
+  switch(id) {
+    case 'num_points':
+      var val = document.getElementById('num_points').value;
+      document.getElementById('num_points_text').innerHTML = "Number of Points : " + val;
+      break;
+    case 'num_centers':
+      var val = document.getElementById('num_centers').value;
+      document.getElementById('num_centers_text').innerHTML = "Number of Centers : " + val;  
+      break
+
+    case 'dense':
+        var val = document.getElementById('dense').value;
+        document.getElementById('dense_text').innerHTML = "Dense : " + val + "%";  
+        break
+  }
+}
+
+function kmeanTag() {
+  document.getElementById('theme').innerHTML = 'K-means Algorithm Visualization';
+  document.getElementById('intro').innerHTML = 'This is a visualization of k-means algorithm';
+  document.getElementById('create_centers_btn').style.visibility = 'visible';
+}
+
+function dbscanTag() {
+  document.getElementById('theme').innerHTML = 'DBSCAN Algorithm Visualization';
+  document.getElementById('intro').innerHTML = 'This is a visualization of DBSCAN algorithm';
+  document.getElementById('create_centers_btn').style.visibility = 'hidden';
+
 }
 

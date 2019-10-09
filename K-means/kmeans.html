@@ -10,6 +10,10 @@
       margin-left: 600px;
     }
 
+    div.tag {
+      margin-left: 600px;
+    }
+
     canvas {
       border: 3px solid black;
     }
@@ -17,7 +21,34 @@
     body {
       margin: 0px;
     }
+    .button {
+      background-color: #4CAF50; /* Green */
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border-radius: 4px;
+    }
 
+    .tag_button {
+      background-color: #DC143C; /* Red */
+      border: none;
+      color: white;
+      padding: 15px 25px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 20px;
+      border-radius: 4px;
+    }
+
+    .inline {
+      font-family: Arial;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
@@ -26,16 +57,24 @@
     <canvas id='myCanvas'> </canvas>
   </div>
 
+  <div class="tag">
+      <button class="tag_button" id="kmean_btn" onclick="kmeanTag()"> K-means Algorithm </button>
+      <button class="tag_button" id="dbscan_btn" onclick="dbscanTag()"> DBSCAN Algorithm </button> <br>
+      <hr />
+  </div>
+
   <div class="right">
-    <p> This is a visualization of k-means algorithm </p>
-    <button class="btn" id="create_points_btn" onclick="create_points()"> Create Points </button>
-    <button class="btn" id="create_centers_btn" onclick="create_centers()"> Create Centers </button> </br>
-    <p> Number of Points </p>
-    <input type="text" id="num_points" value="300">
-    <p> Number of Centers </p>
-    <input type="text" id="num_centers" value="3">
-    <p> Update Clusters </p>
-    <button class="btn" id="update_group_btn" onclick="update()"> Update Clusters </button>
+    <p class="inline" id="intro"> This is a visualization of k-means algorithm </p>
+    <button class="button" id="create_points_btn" onclick="create_points()"> Create Points </button>
+    <button class="button" id="create_centers_btn" onclick="create_centers()"> Create Centers </button> </br>
+    <p class="inline" id="num_points_text"> Number of Points : 500 </p>
+    <input type="range" min="100" max="1000" value="500" class="slider" id="num_points" onchange="scaleBarOnchage('num_points')">
+    <p class="inline" id="dense_text"> Dense : 50% </p>
+    <input type="range" min="0" max="100" value="50" class="slider" id="dense" onchange="scaleBarOnchage('dense')">
+    <p class="inline" id="num_centers_text"> Number of Centers : 3 </p>
+    <input type="range" min="1" max="8" value="3" class="slider" id="num_centers" onchange="scaleBarOnchage('num_centers')">
+    <p class="inline" id="cluster_text">  Mean Distance: inf </p>
+    <button class="button" id="update_group_btn" onclick="update()"> Update Clusters </button>
   </div>
   <script src='../utils/utils.js'> </script>
   <script src="Point.js"> </script>
