@@ -28,6 +28,12 @@ function draw_points() {
   // draw center points
   for (var i = 0; i < Centers.length; i++) {
     ctx.beginPath();
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+    ctx.arc(Centers[i].x, Centers[i].y, 8, 0, Math.PI * 2, true);
+    ctx.stroke();
+
+    ctx.beginPath();
     ctx.fillStyle = Colors[Centers[i].group];
     ctx.arc(Centers[i].x, Centers[i].y, 8, 0, Math.PI * 2, true);
     ctx.fill();
